@@ -6,9 +6,12 @@
   <packaging>war</packaging>
 
   <properties>
+    <properties>
+    <!-- Change from 21 to 17 -->
     <maven.compiler.source>17</maven.compiler.source>
     <maven.compiler.target>17</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
     <tomcat.version>10.1.18</tomcat.version>
   </properties>
 
