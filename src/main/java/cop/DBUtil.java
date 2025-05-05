@@ -11,7 +11,8 @@ public class DBUtil {
     static String user = System.getenv("DB_USER");
     static String pass = System.getenv("DB_PASS");
 
-    static String url = "jdbc:mysql://" + host + ":" + port + "/" + dbName + "?useSSL=false";
+    static String url = "jdbc:mysql://" + host + ":" + port + "/" + dbName + 
+                   "?useSSL=true&requireSSL=true&verifyServerCertificate=false";
 
     static {
         try {
