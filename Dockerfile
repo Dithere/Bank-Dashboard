@@ -13,8 +13,8 @@ RUN mvn clean package -DskipTests -B \
     -Dmaven.test.skip=true \
     -Dmaven.javadoc.skip=true
 
-# Stage 2: Slim Tomcat deployment
-FROM tomcat:10.1-jdk17-jre
+# Stage 2: Production - Using VERIFIED Tomcat image
+FROM tomcat:10.1.18-jdk17-temurin-jammy  # Verified existing tag
 
 # Security hardening
 RUN rm -rf /usr/local/tomcat/webapps/* && \
