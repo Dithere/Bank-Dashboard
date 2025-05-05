@@ -5,14 +5,15 @@ import java.sql.Connection;
 import java.sql.*;
 
 public class DBUtil {
-	static String host = System.getenv("MYSQLHOST");
-static String port = System.getenv("MYSQLPORT");
-static String dbName = System.getenv("MYSQLDATABASE");
-static String user = System.getenv("MYSQLUSER");
-static String pass = System.getenv("MYSQLPASSWORD");
+	String host = System.getenv("DB_HOST");
+String port = System.getenv("DB_PORT");
+String dbName = System.getenv("DB_NAME");
+String user = System.getenv("DB_USER");
+String pass = System.getenv("DB_PASS");
 
-// Example URL for Railway (SSL enabled)
-static String url = "jdbc:mysql://" + host + ":" + port + "/" + dbName + "?useSSL=true&requireSSL=true";
+String url = "jdbc:mysql://" + host + ":" + port + "/" + dbName + "?useSSL=false";
+Connection conn = DriverManager.getConnection(url, user, pass);
+
 
 
     static {
