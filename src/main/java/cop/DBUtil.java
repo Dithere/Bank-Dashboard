@@ -12,7 +12,7 @@ String user = System.getenv("DB_USER");
 String pass = System.getenv("DB_PASS");
 
 String url = "jdbc:mysql://" + host + ":" + port + "/" + dbName + "?useSSL=false";
-Connection conn = DriverManager.getConnection(url, user, pass);
+
 
 
 
