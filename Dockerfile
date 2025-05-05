@@ -17,16 +17,17 @@ RUN mvn clean package -DskipTests -B -X
 # Stage 2: Production with Tomcat
 FROM tomcat:10.1.18-jdk17-temurin-jammy
 
-# 4. Security hardening
-RUN rm -rf /usr/local/tomcat/webapps/* && \
-    apt-get update && \
-    apt-get install -y --no-install-recommends curl && \
+# 4. Security hardening and install unzip
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends unzip curl && \
+    rm -rf /usr/local/tomcat/webapps/* && \
     rm -rf /var/lib/apt/lists/*
 
-# 5. WAR deployment (Recommended exploded method)
+# 5. WAR deployment (Exploded method)
 COPY --from=build /app/target/*.war /usr/local/tomcat/webapps/ROOT.war
 RUN unzip -q /usr/local/tomcat/webapps/ROOT.war -d /usr/local/tomcat/webapps/ROOT/ && \
-    rm /usr/local/tomcat/webapps/ROOT.war
+    rm /usr/local/tomcat/webapps/ROOT.war && \
+    chown -R tomcat:tomcat /usr/local/tomcat/webapps/ROOT
 
 # 6. Health check and runtime
 HEALTHCHECK --interval=30s --timeout=5s \
