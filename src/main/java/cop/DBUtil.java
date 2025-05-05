@@ -15,14 +15,14 @@ public class DBUtil {
 
     static {
         try {
-            Class.forName("com.mysql.cj.jdbc.Driver"); // Load JDBC driver
+            Class.forName("com.mysql.cj.jdbc.Driver");
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
     }
 
     public static Connection getConnection() throws SQLException {
-        System.out.println("Connecting to DB...");
         return DriverManager.getConnection(url, user, pass);
     }
 }
+
