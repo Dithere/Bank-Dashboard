@@ -7,26 +7,27 @@ WORKDIR /app
 COPY pom.xml .
 RUN mvn dependency:go-offline -B
 
-# 2. Copy source files (including webapp content)
+# 2. Copy source files
 COPY src ./src
 COPY src/main/webapp ./src/main/webapp
 
-# 3. Build with debug info
-RUN mvn clean package -DskipTests -B -X
+# 3. Build
+RUN mvn clean package -DskipTests -B
 
 # Stage 2: Production with Tomcat
 FROM tomcat:10.1.18-jdk17-temurin-jammy
 
-# 4. Security hardening and install unzip
+# 4. Install required tools and clean
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends unzip curl && \
-    rm -rf /usr/local/tomcat/webapps/* && \
-    rm -rf /var/lib/apt/lists/*
+    apt-get install -y --no-install-recommends unzip && \
+    rm -rf /var/lib/apt/lists/* && \
+    rm -rf /usr/local/tomcat/webapps/*
 
-# 5. WAR deployment (Exploded method)
-COPY --from=build /app/target/*.war /usr/local/tomcat/webapps/ROOT.war
-RUN unzip -q /usr/local/tomcat/webapps/ROOT.war -d /usr/local/tomcat/webapps/ROOT/ && \
-    rm /usr/local/tomcat/webapps/ROOT.war && \
+# 5. Copy and explode WAR as root
+COPY --from=build /app/target/*.war /tmp/ROOT.war
+RUN mkdir -p /usr/local/tomcat/webapps/ROOT && \
+    unzip -q /tmp/ROOT.war -d /usr/local/tomcat/webapps/ROOT/ && \
+    rm /tmp/ROOT.war && \
     chown -R tomcat:tomcat /usr/local/tomcat/webapps/ROOT
 
 # 6. Health check and runtime
