@@ -5,10 +5,15 @@ import java.sql.Connection;
 import java.sql.*;
 
 public class DBUtil {
-	static String url ="jdbc:mysql://localhost:3306/bank";
+	static String host = System.getenv("DB_HOST");
+static String port = System.getenv("DB_PORT");
+static String dbName = System.getenv("DB_NAME");
+static String user = System.getenv("DB_USER");
+static String pass = System.getenv("DB_PASS");
 
-    static String username ="root";
-    static String password ="Aditya@123";
+static String url = "jdbc:mysql://" + host + ":" + port + "/" + dbName + "?useSSL=false";
+
+
     static {
         try {
             // Load the MySQL JDBC driver
@@ -20,7 +25,7 @@ public class DBUtil {
 
     public static Connection getConnection() throws SQLException {
     	System.out.println("hfufcj");
-        return DriverManager.getConnection(url, username, password);
+        return DriverManager.getConnection(url, user, pass);
     }
 }
 
