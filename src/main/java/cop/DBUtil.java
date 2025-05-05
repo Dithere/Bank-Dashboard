@@ -12,7 +12,7 @@ static String user = System.getenv("MYSQLUSER");
 static String pass = System.getenv("MYSQLPASSWORD");
 
 // Example URL for Railway (SSL enabled)
-static String url = "jdbc:mysql://" + host + ":" + port + "/" + dbName + "?useSSL=true";
+static String url = "jdbc:mysql://" + host + ":" + port + "/" + dbName + "?useSSL=true&requireSSL=true";
 
 
     static {
