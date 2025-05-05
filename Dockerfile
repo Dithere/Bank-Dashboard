@@ -2,14 +2,10 @@
 FROM maven:3.9.6-eclipse-temurin-17 AS build
 WORKDIR /app
 
-# Copy POM first for dependency caching
 COPY pom.xml .
 RUN mvn dependency:go-offline -B
 
-# Copy source files
 COPY src ./src
-
-# Build the application
 RUN mvn clean package -DskipTests -B && \
     mkdir -p /tmp/build-artifacts && \
     cp /app/target/*.war /tmp/build-artifacts/application.war
@@ -17,21 +13,23 @@ RUN mvn clean package -DskipTests -B && \
 # Stage 2: Production with Tomcat
 FROM tomcat:10.1.18-jdk17-temurin-jammy
 
-# Configure Tomcat environment
-ENV CATALINA_OPTS="-Djava.security.egd=file:/dev/./urandom -Djava.awt.headless=true"
+# 1. First verify tomcat user exists
+RUN id tomcat || (echo "Tomcat user missing" && exit 1)
 
-# Clean and prepare webapps directory
-RUN rm -rf /usr/local/tomcat/webapps/* && \
-    mkdir -p /usr/local/tomcat/webapps && \
-    chmod -R 755 /usr/local/tomcat/webapps
+# 2. Prepare webapps directory with correct ownership
+RUN mkdir -p /usr/local/tomcat/webapps && \
+    chown -R tomcat:tomcat /usr/local/tomcat && \
+    chmod -R 755 /usr/local/tomcat/webapps && \
+    rm -rf /usr/local/tomcat/webapps/*
 
-# Copy WAR file
+# 3. Copy WAR file
 COPY --from=build /tmp/build-artifacts/application.war /usr/local/tomcat/webapps/ROOT.war
 
-# Set proper permissions
-RUN chown -R tomcat:tomcat /usr/local/tomcat/webapps
+# 4. Final permission check
+RUN ls -ld /usr/local/tomcat/webapps && \
+    ls -l /usr/local/tomcat/webapps/ROOT.war
 
-# Configure runtime
+# Runtime configuration
 HEALTHCHECK --interval=30s --timeout=5s \
   CMD curl -f http://localhost:8080/ || exit 1
 
