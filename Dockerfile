@@ -13,21 +13,16 @@ RUN mvn clean package -DskipTests -B && \
 # Stage 2: Production with Tomcat
 FROM tomcat:10.1.18-jdk17-temurin-jammy
 
-# 1. First verify tomcat user exists
-RUN id tomcat || (echo "Tomcat user missing" && exit 1)
+# 1. Prepare webapps directory (no user-specific permissions yet)
+RUN rm -rf /usr/local/tomcat/webapps/* && \
+    mkdir -p /usr/local/tomcat/webapps && \
+    chmod -R 755 /usr/local/tomcat/webapps
 
-# 2. Prepare webapps directory with correct ownership
-RUN mkdir -p /usr/local/tomcat/webapps && \
-    chown -R tomcat:tomcat /usr/local/tomcat && \
-    chmod -R 755 /usr/local/tomcat/webapps && \
-    rm -rf /usr/local/tomcat/webapps/*
-
-# 3. Copy WAR file
+# 2. Copy WAR file
 COPY --from=build /tmp/build-artifacts/application.war /usr/local/tomcat/webapps/ROOT.war
 
-# 4. Final permission check
-RUN ls -ld /usr/local/tomcat/webapps && \
-    ls -l /usr/local/tomcat/webapps/ROOT.war
+# 3. Let the base image's entrypoint handle permissions
+# (tomcat user is created at runtime in the official image)
 
 # Runtime configuration
 HEALTHCHECK --interval=30s --timeout=5s \
