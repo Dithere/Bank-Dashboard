@@ -1,26 +1,36 @@
-# Stage 1: Build the WAR using Maven
+# Stage 1: Build with Maven
 FROM maven:3.9.0-eclipse-temurin-17 AS build
 
-# Set working directory
 WORKDIR /app
 
-# Copy all project files
-COPY . .
+# Cache dependencies separately for faster rebuilds
+COPY pom.xml .
+RUN mvn dependency:go-offline -B
 
-# Build the WAR file (skip tests if needed)
-RUN mvn clean package -DskipTests
+# Copy source and build
+COPY src ./src
+RUN mvn clean package -DskipTests -B \
+    -Dmaven.test.skip=true \
+    -Dmaven.javadoc.skip=true
 
-# Stage 2: Deploy to Tomcat
-FROM tomcat:10.1-jdk17
+# Stage 2: Slim Tomcat deployment
+FROM tomcat:10.1-jdk17-jre
 
-# Clean default webapps
-RUN rm -rf /usr/local/tomcat/webapps/*
+# Security hardening
+RUN rm -rf /usr/local/tomcat/webapps/* && \
+    apt-get update && \
+    apt-get install -y curl && \
+    rm -rf /var/lib/apt/lists/*
 
-# Copy built WAR to Tomcat's webapps directory
+# Copy WAR (renamed for context path control)
 COPY --from=build /app/target/*.war /usr/local/tomcat/webapps/ROOT.war
 
-# Expose Tomcat port
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s \
+  CMD curl -f http://localhost:8080/ || exit 1
+
 EXPOSE 8080
 
-# Run Tomcat
+# Secure JVM settings
+ENV CATALINA_OPTS="-Xms512m -Xmx1024m -Djava.security.egd=file:/dev/./urandom"
 CMD ["catalina.sh", "run"]
