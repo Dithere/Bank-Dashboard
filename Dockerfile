@@ -7,16 +7,16 @@ COPY pom.xml .
 RUN mvn dependency:go-offline -B
 
 # 2. Copy source files with proper structure
-COPY src/main ./src/main
-COPY src/test ./src/test  # If tests exist
+COPY src ./src
 
 # 3. Build with debug output and verification
-RUN mvn clean package -DskipTests -B -X && \
-    { [ -f /app/target/*.war ] || \
-      { echo "ERROR: No WAR file generated"; exit 1; }; } && \
+RUN mvn clean package -DskipTests -B -X -e && \
+    { [ -f /app/target/cop-0.0.1-SNAPSHOT.war ] || \
+      { echo "ERROR: No WAR file generated. Contents:"; ls -la /app/target; exit 1; }; } && \
     echo "Build successful. WAR file details:" && \
-    ls -lh /app/target/*.war && \
-    file /app/target/*.war
+    ls -lh /app/target/cop-*.war && \
+    file /app/target/cop-*.war && \
+    cp /app/target/cop-*.war /tmp/application.war
 
 # Stage 2: Production with Tomcat
 FROM tomcat:10.1.18-jdk17-temurin-jammy
@@ -24,19 +24,11 @@ FROM tomcat:10.1.18-jdk17-temurin-jammy
 # Clean existing apps
 RUN rm -rf /usr/local/tomcat/webapps/*
 
-# Copy WAR file with explicit path
-COPY --from=build /app/target/*.war /tmp/application.war
+# Copy WAR file with exact name
+COPY --from=build /tmp/application.war /usr/local/tomcat/webapps/ROOT.war
 
-# Extract with robust error handling
-RUN mkdir -p /usr/local/tomcat/webapps/ROOT && \
-    echo "Build artifacts in /tmp:" && ls -lh /tmp && \
-    echo "WAR file verification:" && file /tmp/application.war && \
-    chown -R tomcat:tomcat /usr/local/tomcat/webapps/ROOT && \
-    { jar xf /tmp/application.war -C /usr/local/tomcat/webapps/ROOT/ || \
-      { echo "ERROR: Failed to extract WAR file"; exit 1; }; } && \
-    rm /tmp/application.war && \
-    echo "Extracted application contents:" && \
-    ls -lh /usr/local/tomcat/webapps/ROOT
+# Let Tomcat handle the deployment naturally
+RUN chown -R tomcat:tomcat /usr/local/tomcat/webapps
 
 # Runtime configuration
 HEALTHCHECK --interval=30s --timeout=5s \
